@@ -6,11 +6,9 @@
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/metaheuropt)
 ![PyPI Downloads](https://pepy.tech/badge/metaheuropt)
 
-Here is the rest of the **README.md** for your package. I have researched the original citations for each algorithm to ensure the table is academically complete.
-
 ## Description
 
-**MetaHeurOpt** is a modular Python library designed for the execution, benchmarking, and statistical analysis of metaheuristic optimization algorithms. It provides a standardized framework to compare diverse algorithms—ranging from classic evolutionary strategies to modern physics-inspired and swarm intelligence models—on complex continuous optimization problems.
+**MetaHeurOpt** is a modular Python library designed for the execution, benchmarking, and statistical analysis of metaheuristic optimization algorithms. It provides a standardized framework to compare diverse algorithms, ranging from classic evolutionary strategies to modern physics-inspired and swarm intelligence models, on complex continuous optimization problems.
 
 ## Installation
 
