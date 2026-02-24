@@ -1,5 +1,6 @@
 __pycache__
 .pypirc
 .venv
+.pytest_cache
 dist
 metaheuropt.egg-info
