@@ -2,7 +2,24 @@ import numpy as np
 from .base import BaseSolver
 
 class GWO(BaseSolver):
+    r"""
+    Grey Wolf Optimizer (GWO).
+    
+    Mimics the leadership hierarchy and hunting mechanism of grey wolves in 
+    nature. The population is guided by the three fittest candidates—Alpha ($\alpha$), 
+    Beta ($\beta$), and Delta ($\delta$)—which direct the remaining Omega ($\omega$) 
+    wolves toward the most promising regions of the search space.
+    """
+
     def __init__(self, bounds, pop_size=50, max_iter=100, stop_patience=100):
+        """
+        Args:
+            bounds (tuple): (lower_bounds, upper_bounds).
+            pop_size (int): Total number of wolves in the pack.
+            max_iter (int): Maximum number of hunting iterations.
+            stop_patience (int): Iterations to wait before stagnation cutoff.
+        """
+        
         super().__init__("GWO", pop_size, max_iter, bounds, stop_patience)
         
         # Leadership positions
@@ -16,7 +33,7 @@ class GWO(BaseSolver):
         self.current_iter = 0
 
     def init_solver(self, obj_func):
-        """Initializes the pack and identifies the initial hierarchy."""
+
         self.current_iter = 0
         self.population = self._initialize_population()
         self.fitness = np.array([obj_func(ind) for ind in self.population])
@@ -37,7 +54,7 @@ class GWO(BaseSolver):
         self.best_solution = self.alpha_pos.copy()
 
     def step(self, obj_func):
-        """Performs one iteration of hunting (position updates)."""
+
         self.current_iter += 1
         
         # Linearly decreasing 'a' from 2 to 0

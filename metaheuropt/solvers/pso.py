@@ -2,8 +2,30 @@ import numpy as np
 from .base import BaseSolver
 
 class PSO(BaseSolver):
+    """
+    Particle Swarm Optimization (PSO).
+    
+    A population-based stochastic optimization technique inspired by the social 
+    behavior of bird flocking or fish schooling. Particles move through the 
+    search space by following their personal historical best positions and the 
+    swarm's collective global best position, balancing momentum, individual 
+    intelligence, and social influence.
+    """
+
     def __init__(self, bounds, pop_size=50, max_iter=100, w_max=0.95, w_min=0.35, 
                  c1=1.4, c2=1.4, stop_patience=100):
+        """
+        Args:
+            bounds (tuple): (lower_bounds, upper_bounds).
+            pop_size (int): Number of particles in the swarm.
+            max_iter (int): Maximum number of iterations (used for linear inertia weight decay).
+            w_max (float): Initial (maximum) inertia weight, controlling exploration.
+            w_min (float): Final (minimum) inertia weight, favoring exploitation.
+            c1 (float): Cognitive coefficient; determines the pull toward a particle's personal best.
+            c2 (float): Social coefficient; determines the pull toward the swarm's global best.
+            stop_patience (int): Iterations to wait before stagnation cutoff.
+        """
+        
         super().__init__("PSO", pop_size, max_iter, bounds, stop_patience)
         
         # Hyperparameters
@@ -23,7 +45,7 @@ class PSO(BaseSolver):
         self.current_iter = 0
 
     def init_solver(self, obj_func):
-        """Initializes the swarm's position, velocity, and personal bests."""
+        
         self.current_iter = 0
         self.population = self._initialize_population()
         self.velocity = np.zeros((self.pop_size, self.dim))
@@ -41,7 +63,7 @@ class PSO(BaseSolver):
         self.best_solution = self.pbest_pos[idx_best].copy()
 
     def step(self, obj_func):
-        """Performs one iteration of the PSO algorithm."""
+        
         self.current_iter += 1
         
         # 1. Update Inertia Weight (Linear decay)

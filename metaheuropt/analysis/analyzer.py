@@ -6,13 +6,37 @@ from scipy import stats
 from itertools import combinations
 
 class ResultsAnalyzer:
+    """
+    A post-processing utility for analyzing and visualizing metaheuristic optimization results.
+
+    This class loads experiment data stored in pickle format, calculates descriptive 
+    and inferential statistics, and generates comparative visualizations including 
+    convergence curves, boxplots, and performance radar charts.
+
+    Attributes:
+        folder (Path): Directory path containing the .pkl result files.
+        data (dict): Nested dictionary storing loaded metrics for each algorithm.
+    """
+
     def __init__(self, results_folder: str):
+        """
+        Initializes the analyzer and automatically loads available data.
+
+        Args:
+            results_folder (str): Path to the directory where Optimizer results are saved.
+        """
+
         self.folder = Path(results_folder)
         self.data = {}
         self._load_data()
 
     def _load_data(self):
-        """Discovers and loads all .pkl files in the results folder."""
+        """
+        Internal method to discover and deserialize all *_data.pkl files.
+        
+        Populates the self.data dictionary using the file stem as the algorithm key.
+        """
+
         files = list(self.folder.glob("*_data.pkl"))
         if not files:
             print(f"No results found in {self.folder}")
@@ -24,7 +48,14 @@ class ResultsAnalyzer:
                 self.data[name] = pickle.load(pkl)
 
     def plot_convergence(self, log_scale: bool = False):
-        """Plots Median convergence with IQR (Interquartile Range) bands."""
+        """
+        Plots the Mean convergence trajectory with Standard Deviation bands.
+
+        Args:
+            log_scale (bool): If True, sets the Y-axis to a logarithmic scale. 
+                              Useful for visualizing high-precision convergence.
+        """
+
         plt.figure(figsize=(10, 6))
         
         for name, d in self.data.items():
@@ -49,7 +80,13 @@ class ResultsAnalyzer:
         plt.show()
 
     def plot_boxplots(self):
-        """Generates boxplots for final fitness comparison."""
+        """
+        Generates boxplots to compare the distribution of final best fitness values.
+        
+        Visualizes the median, quartiles, and outliers for all loaded algorithms 
+        to assess robustness and consistency.
+        """
+
         plt.figure(figsize=(10, 6))
         
         fitness_data = [d["best_fitness_all"] for d in self.data.values()]
@@ -64,7 +101,14 @@ class ResultsAnalyzer:
         plt.show()
 
     def plot_radar(self):
-        """Plots a radar chart for multi-metric comparison."""
+        """
+        Plots a normalized radar (spider) chart comparing multiple performance metrics.
+
+        Metrics evaluated: Best Fitness, Mean Fitness, Std Dev, and Execution Time.
+        Note: Values are Min-Max normalized and inverted so that the outer perimeter 
+        always represents superior performance (Higher is Better).
+        """
+
         # Metrics to compare
         metrics = ['Best', 'Mean', 'Std', 'Time']
         algo_names = list(self.data.keys())
@@ -105,7 +149,20 @@ class ResultsAnalyzer:
         plt.show()
 
     def _cliffs_delta(self, x, y):
-        """Calculate Cliff's Delta effect size."""
+        """
+        Calculates Cliff's Delta non-parametric effect size.
+
+        Measures how often values in one distribution are larger than values in another,
+        providing a magnitude for the difference that is robust to non-normal distributions.
+
+        Args:
+            x (array_like): First distribution of fitness values.
+            y (array_like): Second distribution of fitness values.
+
+        Returns:
+            float: Delta value in the range [-1, 1].
+        """
+
         nx, ny = len(x), len(y)
         x = np.asarray(x)
         y = np.asarray(y)
@@ -116,10 +173,16 @@ class ResultsAnalyzer:
 
     def perform_stats(self, full: bool = False):
         """
-        Performs statistical comparison between algorithms.
-        
-        :param full: If True, performs pairwise Ranksum with FDR correction and Cliff's Delta.
+        Performs a rigorous statistical comparison between algorithms.
+
+        Executes the Kruskal-Wallis H-test for global significance. If significant 
+        and 'full' is True, it proceeds to pairwise Mann-Whitney U tests.
+
+        Args:
+            full (bool): If True, performs pairwise comparisons with Benjamini-Hochberg 
+                         (FDR) p-value correction and Cliff's Delta effect size.
         """
+        
         if len(self.data) < 2:
             print("Error: Need at least two algorithms for comparison.")
             return

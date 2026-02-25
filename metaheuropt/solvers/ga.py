@@ -2,7 +2,28 @@ import numpy as np
 from .base import BaseSolver
 
 class GA(BaseSolver):
+    """
+    Genetic Algorithm (GA) for Continuous Optimization.
+    
+    A population-based heuristic inspired by the process of natural selection. 
+    This implementation uses Binary Tournament Selection, Simulated Binary 
+    Crossover (SBX), and Polynomial Mutation to navigate the search space.
+    """
+
     def __init__(self, bounds, pop_size=50, max_iter=100, pc=0.9, eta_c=15, eta_m=20, stop_patience=100):
+        """
+        Args:
+            bounds (tuple): (lower_bounds, upper_bounds).
+            pop_size (int): Total number of chromosomes in the population.
+            max_iter (int): Maximum number of generations.
+            pc (float): Crossover probability (typically 0.7 - 0.9).
+            eta_c (float): Distribution index for SBX. Higher values produce 
+                           offspring closer to parents.
+            eta_m (float): Distribution index for Polynomial Mutation. Higher 
+                           values produce smaller perturbations.
+            stop_patience (int): Iterations to wait before stagnation cutoff.
+        """
+
         super().__init__("GA", pop_size, max_iter, bounds, stop_patience)
         self.pc, self.eta_c, self.eta_m = pc, eta_c, eta_m
         self.pm = 1.0 / self.dim
@@ -51,6 +72,19 @@ class GA(BaseSolver):
         return False # No improvement
 
     def _poly_mutation(self, x):
+        """
+        Performs Polynomial Mutation on a single individual.
+
+        The mutation magnitude depends on the distribution index eta_m and 
+        the individual's distance from the search space boundaries.
+
+        Args:
+            x (np.ndarray): The parent solution vector.
+
+        Returns:
+            np.ndarray: The mutated solution vector.
+        """
+        
         y = x.copy()
         for j in range(self.dim):
             if np.random.rand() < self.pm:

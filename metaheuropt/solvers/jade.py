@@ -2,7 +2,27 @@ import numpy as np
 from .base import BaseSolver
 
 class JADE(BaseSolver):
+    """
+    Adaptive Differential Evolution with Optional External Archive (JADE).
+    
+    A sophisticated Differential Evolution variant that eliminates the need 
+    for manual tuning of control parameters. It implements a 'current-to-pbest/1' 
+    mutation strategy and an adaptation mechanism that updates mutation ($F$) 
+    and crossover ($CR$) rates based on successful past experiences.
+    """
+
     def __init__(self, bounds, pop_size=50, max_iter=100, p=0.1, c_adapt=0.1, stop_patience=100):
+        r"""
+        Args:
+            bounds (tuple): (lower_bounds, upper_bounds).
+            pop_size (int): Number of target vectors in the population.
+            max_iter (int): Maximum number of generations.
+            p (float): Greediness parameter; determines the top $p\%$ of 
+                       individuals used in the mutation phase.
+            c_adapt (float): Adaptation rate for updating the means of $F$ and $CR$.
+            stop_patience (int): Iterations to wait before stagnation cutoff.
+        """
+
         super().__init__("JADE", pop_size, max_iter, bounds, stop_patience)
         
         # Hyperparameters
@@ -18,21 +38,46 @@ class JADE(BaseSolver):
         self.current_iter = 0
 
     def _lehmer_mean(self, values):
-        """Calculates the Lehmer mean for the mutation factor F."""
+        """
+        Calculates the Lehmer mean ($L_2$) of a given set of values.
+
+        The Lehmer mean is used in JADE to bias the adaptation of the mutation 
+        factor ($F$) toward larger successful values.
+
+        Args:
+            values (list): List of successful mutation factors from the current step.
+
+        Returns:
+            float: The calculated Lehmer mean, or 0 if the input is empty.
+        """
+
         if not values:
             return 0
         arr = np.array(values)
         return np.sum(arr**2) / (np.sum(arr) + 1e-15)
 
     def _cauchy_pos(self, location, scale):
-        """Generates a positive value from a Cauchy distribution."""
+        """
+        Generates a positive value sampled from a Cauchy distribution.
+
+        JADE uses the Cauchy distribution for the mutation factor $F$ to 
+        maintain diversity and prevent premature convergence.
+
+        Args:
+            location (float): The location parameter (mean) of the distribution.
+            scale (float): The scale parameter (usually 0.1).
+
+        Returns:
+            float: A positive random value clipped at a maximum of 1.0.
+        """
+
         val = location + scale * np.tan(np.pi * (np.random.rand() - 0.5))
         while val <= 0:
             val = location + scale * np.tan(np.pi * (np.random.rand() - 0.5))
         return min(val, 1.0)
 
     def init_solver(self, obj_func):
-        """Initializes population and archive."""
+
         self.current_iter = 0
         self.mu_f = 0.5
         self.mu_cr = 0.5
@@ -46,7 +91,7 @@ class JADE(BaseSolver):
         self.best_solution = self.population[idx_best].copy()
 
     def step(self, obj_func):
-        """Performs one iteration of JADE adaptation and evolution."""
+
         self.current_iter += 1
         
         # 1. Prepare for current-to-pbest mutation

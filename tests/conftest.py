@@ -1,7 +1,6 @@
 import pytest
 import numpy as np
 import shutil
-from pathlib import Path
 
 ## To run without plugins and avoid errors use:
 ## pytest --disable-plugin-autoload
@@ -35,8 +34,8 @@ def temp_results_dir(tmp_path):
 @pytest.fixture
 def simple_ga(standard_bounds):
     """A GA instance for testing the optimizer."""
-    from metaheuropt.solvers import GeneticAlgorithm
-    return GeneticAlgorithm(bounds=standard_bounds, pop_size=10, max_iter=5)
+    from metaheuropt.solvers import GA
+    return GA(bounds=standard_bounds, pop_size=10, max_iter=5)
 
 ## Solvers
 @pytest.fixture

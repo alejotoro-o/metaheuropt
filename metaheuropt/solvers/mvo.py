@@ -2,8 +2,30 @@ import numpy as np
 from .base import BaseSolver
 
 class MVO(BaseSolver):
+    """
+    Multi-Verse Optimizer (MVO).
+    
+    A physics-inspired metaheuristic based on three concepts in cosmology: 
+    white holes, black holes, and wormholes. High-fitness universes (white holes) 
+    transfer objects to low-fitness universes (black holes) through a roulette 
+    wheel mechanism (exploration), while wormholes allow for local 
+    perturbations around the best universe (exploitation).
+    """
+
     def __init__(self, bounds, pop_size=50, max_iter=100, 
                  wep_min=0.2, wep_max=1.0, p=3, stop_patience=100):
+        """
+        Args:
+            bounds (tuple): (lower_bounds, upper_bounds).
+            pop_size (int): Number of universes in the multi-verse.
+            max_iter (int): Maximum iterations (used for TDR and WEP adaptation).
+            wep_min (float): Minimum Wormhole Existence Probability.
+            wep_max (float): Maximum Wormhole Existence Probability.
+            p (float): Power parameter that defines the acceleration of the 
+                       Traveling Distance Rate (TDR) over iterations.
+            stop_patience (int): Iterations to wait before stagnation cutoff.
+        """
+        
         super().__init__("MVO", pop_size, max_iter, bounds, stop_patience)
         
         # Hyperparameters
@@ -15,7 +37,7 @@ class MVO(BaseSolver):
         self.current_iter = 0
 
     def init_solver(self, obj_func):
-        """Initializes the universes (population) and identifies the best."""
+        
         self.current_iter = 0
         self.population = self._initialize_population()
         self.fitness = np.array([obj_func(ind) for ind in self.population])
@@ -26,7 +48,7 @@ class MVO(BaseSolver):
         self.best_solution = self.population[idx_best].copy()
 
     def step(self, obj_func):
-        """Performs one iteration of the Multi-Verse Optimizer."""
+        
         self.current_iter += 1
         
         # 1. Update WEP and TDR coefficients

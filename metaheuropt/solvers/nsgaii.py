@@ -2,8 +2,31 @@ import numpy as np
 from .base import BaseSolver
 
 class NSGAII(BaseSolver):
+    """
+    Non-dominated Sorting Genetic Algorithm II (NSGA-II).
+    
+    A modified version of NSGA-II adapted here for single-objective optimization. 
+    It utilizes the robust genetic operators of the original multi-objective 
+    algorithm, including Simulated Binary Crossover (SBX) and Polynomial 
+    Mutation, to maintain a diverse and high-performing population.
+    """
+
     def __init__(self, bounds, pop_size=50, max_iter=100, pc=0.9, eta_c=15, 
                  pm=None, eta_m=20, stop_patience=100):
+        """
+        Args:
+            bounds (tuple): (lower_bounds, upper_bounds).
+            pop_size (int): Number of individuals in the population.
+            max_iter (int): Maximum number of generations.
+            pc (float): Crossover probability (typically 0.7 - 0.9).
+            eta_c (float): Distribution index for SBX. Larger values generate 
+                           offspring closer to the parents.
+            pm (float, optional): Mutation probability. Defaults to 1/dim.
+            eta_m (float): Distribution index for Polynomial Mutation. Larger 
+                           values result in smaller perturbations.
+            stop_patience (int): Iterations to wait before stagnation cutoff.
+        """
+
         super().__init__("NSGAII", pop_size, max_iter, bounds, stop_patience)
         
         # Hyperparameters
@@ -15,7 +38,21 @@ class NSGAII(BaseSolver):
         self.current_iter = 0
 
     def _sbx_crossover(self, p1, p2):
-        """Simulated Binary Crossover (SBX)."""
+        """
+        Performs Simulated Binary Crossover (SBX) between two parents.
+
+        SBX simulates the search capabilities of a single-point crossover 
+        on binary strings but is designed specifically for real-valued 
+        search spaces.
+
+        Args:
+            p1 (np.ndarray): The first parent vector.
+            p2 (np.ndarray): The second parent vector.
+
+        Returns:
+            tuple: Two clipped offspring vectors (c1, c2).
+        """
+
         u = np.random.rand(self.dim)
         beta = np.zeros(self.dim)
         
@@ -30,7 +67,20 @@ class NSGAII(BaseSolver):
         return self._clip_bounds(c1), self._clip_bounds(c2)
 
     def _polynomial_mutation(self, x):
-        """Polynomial Mutation."""
+        """
+        Applies Polynomial Mutation to a solution vector.
+
+        This operator provides a probability-based perturbation that favors 
+        smaller changes near the original value, controlled by the distribution 
+        index eta_m.
+
+        Args:
+            x (np.ndarray): The solution vector to mutate.
+
+        Returns:
+            np.ndarray: The mutated and boundary-clipped solution vector.
+        """
+        
         y = x.copy()
         for j in range(self.dim):
             if np.random.rand() < self.pm:

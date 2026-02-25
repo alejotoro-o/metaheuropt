@@ -8,7 +8,31 @@ from typing import List, Union, Optional
 from ..solvers.base import BaseSolver
 
 class Optimizer:
+    """
+    Orchestrator for benchmarking and running multiple metaheuristic solvers.
+
+    This class handles the execution of several optimization algorithms over 
+    multiple independent runs, manages progress tracking, calculates aggregated 
+    statistics, and exports results for post-processing.
+
+    Attributes:
+        solvers (List[BaseSolver]): List of initialized solver instances to compare.
+        obj_func (callable): The objective function to minimize.
+        num_runs (int): Number of independent executions per solver for statistical validity.
+        results (dict): Internal storage for raw data collected during execution.
+        output_dir (Path): Directory where results and summaries will be exported.
+    """
+
     def __init__(self, solvers: Union[BaseSolver, List[BaseSolver]], obj_func, num_runs: int = 30):
+        """
+        Initializes the Optimizer with selected solvers and a target function.
+
+        Args:
+            solvers (Union[BaseSolver, List[BaseSolver]]): A single solver or a list of solvers.
+            obj_func (callable): Function that accepts a 1D NumPy array and returns a scalar.
+            num_runs (int): Number of times to repeat the optimization for each algorithm.
+        """
+
         self.solvers = solvers if isinstance(solvers, list) else [solvers]
         self.obj_func = obj_func
         self.num_runs = num_runs
@@ -18,11 +42,16 @@ class Optimizer:
 
     def run(self, save_results: bool = True, results_folder: Optional[str] = None):
         """
-        Runs all solvers and optionally saves detailed data for each.
-        
-        :param save_results: Whether to save pkl and csv files.
-        :param results_folder: Optional custom path to save results.
+        Executes the benchmarking process for all registered solvers.
+
+        Iterates through the solvers and performs the specified number of independent runs,
+        monitoring convergence and stagnation for each.
+
+        Args:
+            save_results (bool): If True, serializes detailed metrics to Disk (.pkl and .csv).
+            results_folder (Optional[str]): Custom path for output files. Defaults to "results/".
         """
+
         # Update output directory if a custom folder is provided
         if results_folder:
             self.output_dir = Path(results_folder)
@@ -69,7 +98,17 @@ class Optimizer:
             self.save_summary()
 
     def _save_solver_data(self, solver_name: str, run_data: list):
-        """Saves raw data and padded convergence stats using Pickle."""
+        """
+        Processes and saves the statistical data for a specific solver.
+
+        Normalizes convergence curves using edge padding (to account for early stopping)
+        and serializes a dictionary of metrics via Pickle.
+
+        Args:
+            solver_name (str): Name identifier of the algorithm.
+            run_data (list): List of dictionaries containing metrics for each independent run.
+        """
+
         max_len = max(len(d["convergence"]) for d in run_data)
         padded_conv = np.array([
             np.pad(d["convergence"], (0, max_len - len(d["convergence"])), 'edge') 
@@ -90,7 +129,13 @@ class Optimizer:
         print(f" > Detailed data for {solver_name} saved to {filename}")
 
     def summary(self):
-        """Prints a statistical summary table to console."""
+        """
+        Calculates and displays a formatted summary table in the console.
+
+        The table includes the Mean Best Fitness, Standard Deviation, and Average
+        Execution Time for every algorithm tested.
+        """
+
         print(f"\n{'='*25} GLOBAL SUMMARY {'='*25}")
         print(f"{'Algorithm':<12} | {'Mean Best':<12} | {'Std Dev':<12} | {'Avg Time (s)':<12}")
         print("-" * 65)
@@ -102,7 +147,13 @@ class Optimizer:
         print("-" * 65)
 
     def save_summary(self, filename: str = "summary_results.csv"):
-        """Saves the summary table to a CSV file using built-in csv module."""
+        """
+        Exports the global statistical summary to a CSV file.
+
+        Args:
+            filename (str): Name of the CSV file. Defaults to "summary_results.csv".
+        """
+
         path = self.output_dir / filename
         headers = ["Algorithm", "Mean Fitness", "Std Fitness", "Mean Time (s)", "Runs"]
         
@@ -122,7 +173,18 @@ class Optimizer:
         print(f"Global summary saved to {path}")
 
     def get_overall_best(self, solver_name):
-        """Returns the best solution ever found by a specific solver."""
+        """
+        Retrieves the single best run result for a given algorithm.
+
+        Args:
+            solver_name (str): The name of the solver to query.
+
+        Returns:
+            dict: Dictionary containing the best fitness, solution vector, 
+                  execution time, and convergence history for the best run.
+                  Returns None if the solver_name is not found.
+        """
+        
         if solver_name not in self.results: return None
         best_run = min(self.results[solver_name], key=lambda x: x["fitness"])
         return best_run

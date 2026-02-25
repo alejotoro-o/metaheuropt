@@ -2,7 +2,28 @@ import numpy as np
 from .base import BaseSolver
 
 class WOA(BaseSolver):
+    """
+    Whale Optimization Algorithm (WOA).
+    
+    A nature-inspired metaheuristic that mimics the social behavior of humpback 
+    whales. The algorithm focuses on the "bubble-net" hunting strategy, 
+    utilizing a mathematical model to switch between shrinking encircling, 
+    spiral position updating (exploitation), and random search for prey 
+    (exploration).
+    """
+
     def __init__(self, bounds, pop_size=50, max_iter=100, b=1, stop_patience=100):
+        """
+        Args:
+            bounds (tuple): (lower_bounds, upper_bounds).
+            pop_size (int): Number of search agents (whales).
+            max_iter (int): Total number of iterations (used to decay the 
+                           linear coefficient 'a' for exploration control).
+            b (float): Logarithmic spiral shape constant; defines the path 
+                       taken by the whale toward the prey.
+            stop_patience (int): Iterations to wait before stagnation cutoff.
+        """
+        
         super().__init__("WOA", pop_size, max_iter, bounds, stop_patience)
         
         # Hyperparameters
@@ -10,7 +31,7 @@ class WOA(BaseSolver):
         self.current_iter = 0
 
     def init_solver(self, obj_func):
-        """Initializes the whale pod and identifies the Leader."""
+        
         self.current_iter = 0
         self.population = self._initialize_population()
         self.fitness = np.array([obj_func(ind) for ind in self.population])
@@ -20,7 +41,7 @@ class WOA(BaseSolver):
         self.best_solution = self.population[idx_best].copy()
 
     def step(self, obj_func):
-        """Performs one iteration of bubble-net hunting."""
+        
         self.current_iter += 1
         
         # a decreases linearly from 2 to 0

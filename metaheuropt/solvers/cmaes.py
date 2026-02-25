@@ -2,7 +2,26 @@ import numpy as np
 from .base import BaseSolver
 
 class CMAES(BaseSolver):
+    """
+    Covariance Matrix Adaptation Evolution Strategy (CMA-ES).
+    
+    A state-of-the-art derivative-free optimization algorithm for non-linear, 
+    non-convex continuous problems. It adapts the multivariate normal 
+    distribution (mean and covariance matrix) to capture the landscape 
+    of the objective function.
+    """
+
     def __init__(self, bounds, pop_size=10, max_iter=100, sigma=0.3, stop_patience=100):
+        """
+        Args:
+            bounds (tuple): (lower_bounds, upper_bounds).
+            pop_size (int): Number of individuals (lambda) sampled per generation.
+            max_iter (int): Maximum number of generations.
+            sigma (float): Initial step-size (standard deviation), usually 
+                           scaled to ~30% of the search range.
+            stop_patience (int): Iterations to wait before stagnation cutoff.
+        """
+
         super().__init__("CMAES", pop_size, max_iter, bounds, stop_patience)
         
         # Hyperparameters
@@ -28,7 +47,13 @@ class CMAES(BaseSolver):
         self.reset_state()
 
     def reset_state(self):
-        """Resets evolution paths and matrices."""
+        r"""
+        Initializes or resets the internal evolution state variables.
+        
+        This includes the mean vector, evolution paths ($p_c, p_s$), 
+        the covariance matrix ($C$), and the step-size ($\sigma$).
+        """
+        
         self.m = (self.lb + self.ub) / 2.0
         self.sigma = self.initial_sigma
         self.pc = np.zeros(self.dim)
